@@ -40,6 +40,7 @@ class Graphics(Constants):
             self.window = pygame.display.set_mode([self.window_size] * 2)
             self.screen = pygame.display.get_surface()
             self.font = pygame.font.SysFont("monospace", 15)
+            self.initialized_window=True
 
     def _setup_colors(
         self,

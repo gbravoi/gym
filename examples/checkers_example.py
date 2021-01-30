@@ -22,6 +22,7 @@ def main():
     while True:
         from_row, from_col, to_row, to_col = current_agent.act(obs)
         obs, rew, done, info = env.step(current_agent, from_row, from_col, to_row, to_col)
+        env.render()
         current_agent.consume(obs, rew, done)
 
         if done:
