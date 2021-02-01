@@ -42,6 +42,7 @@ class Graphics(Constants):
             self.screen = pygame.display.set_mode([self.window_size] * 2)
             self.background = pygame.image.load(self.board_image)
             self._setup_colors()
+            self.initialized_window=True
 
     def _setup_colors(
         self,

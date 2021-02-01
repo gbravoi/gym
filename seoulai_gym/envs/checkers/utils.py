@@ -2,6 +2,8 @@
 Martin Kersner, m.kersner@gmail.com
 seoulai.com
 2018
+
+modifies by Gabriela Bravo
 """
 import random
 from typing import List
@@ -18,10 +20,10 @@ class BoardEncoding(object):
         self._encoding = {}
 
         self.empty = 0
-        self.dark = 10
-        self.dark_king = 11
-        self.light = 20
-        self.light_king = 21
+        self.dark = 20
+        self.dark_king = 21
+        self.light = 10
+        self.light_king = 11
 
     def __getitem__(self, name):
         return self._encoding[name]
@@ -122,3 +124,13 @@ def generate_random_move(
     rand_from_row, rand_from_col = random.choice(list(valid_moves.keys()))
     rand_to_row, rand_to_col = random.choice(valid_moves[(rand_from_row, rand_from_col)])
     return rand_from_row, rand_from_col, rand_to_row, rand_to_col
+
+
+#new functions
+def print_board(board_list):
+	""" 
+	print board for debugging putposes
+    receives board as a board_list: List[List],
+	"""
+	numpy_board=board_list2numpy(board_list)
+	print(numpy_board)
