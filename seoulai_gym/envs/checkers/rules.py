@@ -61,12 +61,13 @@ class Rules(object):
         return positions
 
     @staticmethod
-    def get_valid_moves(
+    def get_valid_moves_simple(
         board_list: List[List[Piece]],
         from_row: int,
         from_col: int,
     ) ->List[Tuple[int, int]]:
         """Generate valid moves for given position with respect to the current state of game.
+        simple: move one square
 
         Args:
             board_list: Information about positions of pieces.
@@ -80,7 +81,30 @@ class Rules(object):
         def validate_move_wrapper(to_row_col):
             return Rules.validate_move(board_list, from_row, from_col, *to_row_col)
 
-        return list(filter(validate_move_wrapper, Rules.generate_all_moves(from_row, from_col)))
+        return list(filter(validate_move_wrapper, Rules.generate_all_moves_simple(from_row, from_col)))
+
+    @staticmethod
+    def get_valid_moves_jump(
+        board_list: List[List[Piece]],
+        from_row: int,
+        from_col: int,
+    ) ->List[Tuple[int, int]]:
+        """Generate valid moves for given position with respect to the current state of game.
+        simple: move one square
+
+        Args:
+            board_list: Information about positions of pieces.
+            from_row: Row of board of piece location.
+            from_col: Column of board of piece location.
+
+        Returns:
+            List of (row, column) tuples representing valid moves for given piece location at current
+            state of board.
+        """
+        def validate_move_wrapper(to_row_col):
+            return Rules.validate_move(board_list, from_row, from_col, *to_row_col)
+
+        return list(filter(validate_move_wrapper, Rules.generate_all_moves_jump(from_row, from_col)))
 
     @staticmethod
     def generate_valid_moves(
@@ -100,13 +124,21 @@ class Rules(object):
                 of dictionary are represented as a list of tuples as a new valid piece coordinates.
         """
         moves = {}
+        double_moves={}
         positions = Rules.get_positions(board_list, ptype, board_size)
 
         for row, col in positions:
-            temp_moves = Rules.get_valid_moves(board_list, row, col)
-            if len(temp_moves) > 0:
-                moves[(row, col)] = temp_moves
+            temp_moves_jump = Rules.get_valid_moves_jump(board_list, row, col)
+            if len(temp_moves_jump) > 0:#first find jumps, if there are jumps, do not look for simple moves
+                double_moves[(row, col)] = temp_moves_jump
+            elif len(double_moves)==0:
+                temp_moves = Rules.get_valid_moves_simple(board_list, row, col)
+                if len(temp_moves) > 0:
+                    moves[(row, col)] = temp_moves
 
+        #add rule: when you can jump a piece, you must do it
+        if len(double_moves)>0:
+            return double_moves
         return moves
 
     @staticmethod
@@ -130,7 +162,7 @@ class Rules(object):
             True if given move is valid, otherwise false.
         """
         # not among available moves
-        if (to_row, to_col) not in Rules.generate_all_moves(from_row, from_col):
+        if( (to_row, to_col) not in Rules.generate_all_moves_simple(from_row, from_col)) and ((to_row, to_col) not in Rules.generate_all_moves_jump(from_row, from_col)):
             return False
 
         # can't move piece from outside of board
@@ -201,7 +233,7 @@ class Rules(object):
             return None, None
 
     @staticmethod
-    def generate_all_moves(
+    def generate_all_moves_simple(
         from_row: int,
         from_col: int,
     ) -> List[Tuple[int, int]]:
@@ -219,6 +251,26 @@ class Rules(object):
             (from_row+1, from_col-1),
             (from_row-1, from_col+1),
             (from_row+1, from_col+1),
+        ]
+
+        return moves
+
+
+    @staticmethod
+    def generate_all_moves_jump(
+        from_row: int,
+        from_col: int,
+    ) -> List[Tuple[int, int]]:
+        """Generate all moves for given board position. Some moves can be invalid.
+
+        Args:
+            from_row: Row of board of piece location.
+            from_col: Column of board of piece location.
+
+        Returns:
+            moves: Generated moves for given position.
+        """
+        moves = [
             (from_row-2, from_col-2),
             (from_row+2, from_col-2),
             (from_row-2, from_col+2),

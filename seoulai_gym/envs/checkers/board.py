@@ -7,6 +7,7 @@ from typing import Tuple
 from typing import Dict
 from typing import List
 from types import SimpleNamespace
+import random
 
 from seoulai_gym.envs.checkers.base import Constants
 from seoulai_gym.envs.checkers.base import DarkPiece
@@ -18,13 +19,13 @@ from seoulai_gym.envs.checkers.utils import generate_random_move
 class Rewards(object):
     def __init__(self):
         self._rew = SimpleNamespace(
-            default=1.0,
+            default=1,
             invalid_move=0.0,
             move_opponent_piece=0.0,
-            remove_opponent_piece=5.0,
-            become_king=7.0,
-            opponent_no_pieces=10.0,
-            opponent_no_valid_move=20.0,
+            remove_opponent_piece=10,
+            become_king=500,
+            opponent_no_pieces=1000,
+            opponent_no_valid_move=1000,
         )
 
     def __getitem__(self, name: str):
@@ -140,7 +141,7 @@ class Board(Constants, Rules):
         # don't move with opponent's piece
         if ptype != self.board_list[from_row][from_col].ptype:
             rew = self.rewards["move_opponent_piece"]
-            info.update({"move_opponent_piece": (from_row, from_col)})
+            info.update({"move_opponenstept_piece": (from_row, from_col)})
 
             from_row, from_col, to_row, to_col = generate_random_move(
                 self.board_list,
@@ -152,14 +153,35 @@ class Board(Constants, Rules):
         info_update = self.execute_move(from_row, from_col, to_row, to_col)
         info.update(info_update)
 
-        # remove opponent's piece
+        # remove opponent's piece. by rule: if other jump is possible, jump again
         between_row, between_col = self.get_between_position(from_row, from_col, to_row, to_col)
         if between_row is not None and between_col is not None:
             p_between = self.board_list[between_row][between_col]
             if p_between is not None:
+                i=1
                 self.board_list[between_row][between_col] = None
-                info.update({"removed": ((between_row, between_col), p_between)})
+                info.update({"removed_{}".format(i): ((between_row, between_col), p_between)})
                 rew = self.rewards["remove_opponent_piece"]
+                #check if other jump is possible
+                jumps_list=Rules.get_valid_moves_jump(self.board_list, to_row, to_col)#valid jumps where it landed
+                while len(jumps_list)>0:
+                    i+=1
+                    temp_from_row=to_row
+                    temp_from_col=to_col
+                    jump=random.choice(jumps_list)
+                    to_row=jump[0]
+                    to_col=jump[1]
+                    between_row, between_col = self.get_between_position(temp_from_row, temp_from_col, to_row, to_col)
+                    self.board_list[between_row][between_col] = None
+                    info.update({"removed_{i}": ((between_row, between_col), p_between)})
+                    rew += self.rewards["remove_opponent_piece"]
+                    #update board
+                    info_update = self.execute_move(temp_from_row, temp_from_col, to_row, to_col)
+                    info.update(info_update)
+                    jumps_list=Rules.get_valid_moves_jump(self.board_list, to_row, to_col)#valid jumps where it landed
+        
+
+
 
         # become king
         p = self.board_list[to_row][to_col]

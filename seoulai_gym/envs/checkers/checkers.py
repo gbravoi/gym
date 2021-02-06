@@ -12,7 +12,7 @@ from typing import List
 from typing import Tuple
 
 import pygame
-from pygame.locals import QUIT
+from pygame.locals import QUIT, MOUSEBUTTONUP
 
 from seoulai_gym.envs.checkers.base import Piece
 from seoulai_gym.envs.checkers.base import Constants
@@ -79,7 +79,13 @@ class Checkers(Constants, Rules):
             done: Information about end of game.
             info: Additional information about current step.
         """
-        self.possible_moves = self.get_valid_moves(self.board.board_list, from_row, from_col)
+        #get podible moves for highlight. First check for jumtps
+        possible_jumps=self.get_valid_moves_jump(self.board.board_list, from_row, from_col)
+        if len(possible_jumps)>0:
+            self.possible_moves = possible_jumps
+        else:
+            self.possible_moves = self.get_valid_moves_simple(self.board.board_list, from_row, from_col)
+
         self.piece_location = (from_row, from_col)
         obs, rew, done, info = self.board.move(agent.ptype, from_row, from_col, to_row, to_col)
         return copy.deepcopy(obs), rew, done, info
@@ -113,6 +119,8 @@ class Checkers(Constants, Rules):
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
+            elif event.type == MOUSEBUTTONUP:
+                None 
 
     def close(
         self,
