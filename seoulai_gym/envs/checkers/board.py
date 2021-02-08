@@ -22,8 +22,8 @@ class Rewards(object):
             default=1,
             invalid_move=0.0,
             move_opponent_piece=0.0,
-            remove_opponent_piece=200,
-            become_king=400,
+            remove_opponent_piece=50,
+            become_king=100,
             opponent_no_pieces=1000,
             opponent_no_valid_move=1000,
         )
